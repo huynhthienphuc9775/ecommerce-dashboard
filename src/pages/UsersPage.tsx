@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { getUsers } from '@/features/users/api'
+import { getUsers } from '@/api/users'
 import { getErrorMessage } from '@/lib/get-error-message'
 
 export function UsersPage() {

@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { register } from '@/features/auth/api'
+import { register } from '@/api/auth'
 import { getErrorMessage } from '@/lib/get-error-message'
 
 export function RegisterPage() {
