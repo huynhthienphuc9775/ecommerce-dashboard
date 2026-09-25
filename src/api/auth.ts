@@ -1,13 +1,9 @@
 import { apiClient } from '@/lib/api-client'
-
-export interface LoginPayload {
-  email: string
-  password: string
-}
-
-export interface LoginResponse {
-  access_token: string
-}
+import type {
+  LoginPayload,
+  LoginResponse,
+  RegisterPayload,
+} from '@/types/auth'
 
 export async function login(payload: LoginPayload) {
   const { data } = await apiClient.post<LoginResponse>(
@@ -15,12 +11,6 @@ export async function login(payload: LoginPayload) {
     payload,
   )
   return data
-}
-
-export interface RegisterPayload {
-  name: string
-  email: string
-  password: string
 }
 
 export async function register(payload: RegisterPayload) {

@@ -40,11 +40,10 @@ import {
   createInvitation,
   deleteInvitation,
   getInvitations,
-  type Invitation,
-  InvitationType,
   updateInvitation,
 } from '@/api/invitations'
 import { getErrorMessage } from '@/lib/get-error-message'
+import { type Invitation, InvitationType } from '@/types/invitation'
 
 const TYPE_LABELS: Record<InvitationType, string> = {
   [InvitationType.WEDDING]: 'Đám cưới',
