@@ -18,7 +18,7 @@ export function UsersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Users</h1>
+      <h1 className="text-2xl font-semibold">Người dùng</h1>
 
       <div className="mt-6 rounded-md border">
         <Table>

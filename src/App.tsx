@@ -8,7 +8,6 @@ import { RegisterPage } from '@/pages/auth/RegisterPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { HomePage } from '@/pages/HomePage'
 import { InvitationsPage } from '@/pages/InvitationsPage'
-import { ProductsPage } from '@/pages/ProductsPage'
 import { UsersPage } from '@/pages/UsersPage'
 
 function App() {
@@ -24,9 +23,8 @@ function App() {
       <Route element={<RequireAuth />}>
         <Route path="/admin" element={<MainLayout />}>
           <Route index element={<DashboardPage />} />
-          <Route path="products" element={<ProductsPage />} />
-          <Route path="users" element={<UsersPage />} />
           <Route path="invitations" element={<InvitationsPage />} />
+          <Route path="users" element={<UsersPage />} />
         </Route>
       </Route>
     </Routes>

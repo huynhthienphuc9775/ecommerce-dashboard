@@ -50,6 +50,13 @@ const TYPE_LABELS: Record<InvitationType, string> = {
   [InvitationType.BIRTHDAY]: 'Sinh nhật',
 }
 
+const TYPE_BADGE_CLASSNAME: Record<InvitationType, string> = {
+  [InvitationType.WEDDING]:
+    'bg-rose-100! text-rose-700! dark:bg-rose-500/20! dark:text-rose-300!',
+  [InvitationType.BIRTHDAY]:
+    'bg-amber-100! text-amber-700! dark:bg-amber-500/20! dark:text-amber-300!',
+}
+
 const PAGE_SIZE = 10
 
 type ActiveFilter = 'all' | 'active' | 'inactive'
@@ -175,8 +182,8 @@ export function InvitationsPage() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Invitations</h1>
-        <Button onClick={openCreateForm}>Thêm invitation</Button>
+        <h1 className="text-2xl font-semibold">Thiệp mời</h1>
+        <Button onClick={openCreateForm}>Thêm thiệp mời</Button>
       </div>
 
       <div className="mt-4 flex gap-3">
@@ -255,7 +262,7 @@ export function InvitationsPage() {
               invitationsQuery.data.data.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center text-muted-foreground">
-                    Chưa có invitation nào.
+                    Chưa có thiệp mời nào.
                   </TableCell>
                 </TableRow>
               )}
@@ -269,7 +276,14 @@ export function InvitationsPage() {
                   />
                 </TableCell>
                 <TableCell>{invitation.name}</TableCell>
-                <TableCell>{TYPE_LABELS[invitation.type]}</TableCell>
+                <TableCell>
+                  <Badge
+                    variant="outline"
+                    className={TYPE_BADGE_CLASSNAME[invitation.type]}
+                  >
+                    {TYPE_LABELS[invitation.type]}
+                  </Badge>
+                </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Switch
@@ -318,7 +332,7 @@ export function InvitationsPage() {
           <p className="text-sm text-muted-foreground">
             Trang {invitationsQuery.data.page}/
             {invitationsQuery.data.totalPages} — Tổng{' '}
-            {invitationsQuery.data.total} invitation
+            {invitationsQuery.data.total} thiệp mời
           </p>
           <div className="flex gap-2">
             <Button
@@ -345,7 +359,7 @@ export function InvitationsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingInvitation ? 'Sửa invitation' : 'Thêm invitation'}
+              {editingInvitation ? 'Sửa thiệp mời' : 'Thêm thiệp mời'}
             </DialogTitle>
           </DialogHeader>
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
@@ -411,7 +425,7 @@ export function InvitationsPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Xóa invitation?</AlertDialogTitle>
+            <AlertDialogTitle>Xóa thiệp mời?</AlertDialogTitle>
             <AlertDialogDescription>
               Hành động này không thể hoàn tác. "{deletingInvitation?.name}" sẽ
               bị xóa vĩnh viễn.
