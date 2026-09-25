@@ -7,7 +7,7 @@ export function RequireGuest() {
 
   if (isAuthenticated) {
     const from = (location.state as { from?: Location } | null)?.from
-    return <Navigate to={from?.pathname ?? '/'} replace />
+    return <Navigate to={from?.pathname ?? '/admin'} replace />
   }
 
   return <Outlet />

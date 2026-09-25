@@ -1,42 +1,42 @@
-import { useMutation } from '@tanstack/react-query'
-import { type SubmitEvent, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
+import { login } from "@/api/auth";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { login } from '@/api/auth'
-import { getErrorMessage } from '@/lib/get-error-message'
-import { useAuthStore } from '@/store/auth-store'
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { useAuthStore } from "@/store/auth-store";
+import { useMutation } from "@tanstack/react-query";
+import { type SubmitEvent, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 
 export function LoginPage() {
-  const location = useLocation()
-  const setAccessToken = useAuthStore((state) => state.setAccessToken)
+  const location = useLocation();
+  const setAccessToken = useAuthStore((state) => state.setAccessToken);
 
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const loginMutation = useMutation({
     mutationFn: login,
     onSuccess: (data) => {
-      setAccessToken(data.access_token)
+      setAccessToken(data.access_token);
     },
-  })
+  });
 
   function handleSubmit(event: SubmitEvent) {
-    event.preventDefault()
-    loginMutation.mutate({ email, password })
+    event.preventDefault();
+    loginMutation.mutate({ email, password });
   }
 
   const justRegistered = Boolean(
     (location.state as { registered?: boolean } | null)?.registered,
-  )
+  );
 
   return (
     <Card className="w-full max-w-sm">
@@ -84,16 +84,16 @@ export function LoginPage() {
             className="mt-2 w-full"
             disabled={loginMutation.isPending}
           >
-            {loginMutation.isPending ? 'Đang đăng nhập...' : 'Đăng nhập'}
+            {loginMutation.isPending ? "Đang đăng nhập..." : "Đăng nhập"}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
-            Chưa có tài khoản?{' '}
-            <Link to="/register" className="font-medium text-primary">
-              Đăng ký
+            Di chuyển vào trang chủ?{" "}
+            <Link to="/" className="font-medium text-primary">
+              Trang chủ
             </Link>
           </p>
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }

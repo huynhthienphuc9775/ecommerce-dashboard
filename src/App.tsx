@@ -6,12 +6,15 @@ import { MainLayout } from '@/layouts/MainLayout'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { RegisterPage } from '@/pages/auth/RegisterPage'
 import { DashboardPage } from '@/pages/DashboardPage'
+import { HomePage } from '@/pages/HomePage'
+import { InvitationsPage } from '@/pages/InvitationsPage'
 import { ProductsPage } from '@/pages/ProductsPage'
 import { UsersPage } from '@/pages/UsersPage'
 
 function App() {
   return (
     <Routes>
+      <Route path="/" element={<HomePage />} />
       <Route element={<RequireGuest />}>
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />} />
@@ -19,10 +22,11 @@ function App() {
         </Route>
       </Route>
       <Route element={<RequireAuth />}>
-        <Route element={<MainLayout />}>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/products" element={<ProductsPage />} />
-          <Route path="/users" element={<UsersPage />} />
+        <Route path="/admin" element={<MainLayout />}>
+          <Route index element={<DashboardPage />} />
+          <Route path="products" element={<ProductsPage />} />
+          <Route path="users" element={<UsersPage />} />
+          <Route path="invitations" element={<InvitationsPage />} />
         </Route>
       </Route>
     </Routes>
