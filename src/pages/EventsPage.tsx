@@ -39,6 +39,7 @@ import {
 import { getCategories } from '@/api/categories'
 import { createEvent, deleteEvent, getEvents, updateEvent } from '@/api/events'
 import { getErrorMessage } from '@/lib/get-error-message'
+import { toast } from '@/lib/toast'
 import type { Event } from '@/types/event'
 
 const PAGE_SIZE = 10
@@ -116,19 +117,21 @@ export function EventsPage() {
 
   const createMutation = useMutation({
     mutationFn: createEvent,
-    onSuccess: () => {
+    onSuccess: (event) => {
       queryClient.invalidateQueries({ queryKey: ['events'] })
       queryClient.invalidateQueries({ queryKey: ['event-options'] })
+      toast.success(`Đã thêm sự kiện "${event.name}"`)
       setFormOpen(false)
     },
   })
 
   const updateMutation = useMutation({
     mutationFn: updateEvent,
-    onSuccess: () => {
+    onSuccess: (event) => {
       queryClient.invalidateQueries({ queryKey: ['events'] })
       queryClient.invalidateQueries({ queryKey: ['event-options'] })
       queryClient.invalidateQueries({ queryKey: ['invitations'] })
+      toast.success(`Đã cập nhật sự kiện "${event.name}"`)
       setFormOpen(false)
     },
   })
@@ -140,6 +143,7 @@ export function EventsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] })
       queryClient.invalidateQueries({ queryKey: ['event-options'] })
+      toast.success(`Đã xóa sự kiện "${deletingEvent?.name}"`)
       setDeletingEvent(null)
     },
     onSettled: () => {

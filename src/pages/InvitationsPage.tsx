@@ -46,6 +46,7 @@ import {
   updateInvitation,
 } from '@/api/invitations'
 import { getErrorMessage } from '@/lib/get-error-message'
+import { toast } from '@/lib/toast'
 import type { Invitation } from '@/types/invitation'
 
 const PAGE_SIZE = 10
@@ -148,16 +149,18 @@ export function InvitationsPage() {
 
   const createMutation = useMutation({
     mutationFn: createInvitation,
-    onSuccess: () => {
+    onSuccess: (invitation) => {
       queryClient.invalidateQueries({ queryKey: ['invitations'] })
+      toast.success(`Đã thêm thiệp mời "${invitation.name}"`)
       setFormOpen(false)
     },
   })
 
   const updateMutation = useMutation({
     mutationFn: updateInvitation,
-    onSuccess: () => {
+    onSuccess: (invitation) => {
       queryClient.invalidateQueries({ queryKey: ['invitations'] })
+      toast.success(`Đã cập nhật thiệp mời "${invitation.name}"`)
       setFormOpen(false)
     },
   })
@@ -168,6 +171,7 @@ export function InvitationsPage() {
     mutationFn: deleteInvitation,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invitations'] })
+      toast.success(`Đã xóa thiệp mời "${deletingInvitation?.name}"`)
       setDeletingInvitation(null)
     },
     onSettled: () => {
@@ -183,8 +187,13 @@ export function InvitationsPage() {
 
   const toggleActiveMutation = useMutation({
     mutationFn: updateInvitation,
-    onSuccess: () => {
+    onSuccess: (invitation) => {
       queryClient.invalidateQueries({ queryKey: ['invitations'] })
+      toast.success(
+        invitation.active
+          ? `Đã bật "${invitation.name}"`
+          : `Đã tạm ẩn "${invitation.name}"`,
+      )
     },
   })
 

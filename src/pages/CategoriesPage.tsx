@@ -35,6 +35,7 @@ import {
   updateCategory,
 } from '@/api/categories'
 import { getErrorMessage } from '@/lib/get-error-message'
+import { toast } from '@/lib/toast'
 import type { Category } from '@/types/category'
 
 export function CategoriesPage() {
@@ -67,17 +68,19 @@ export function CategoriesPage() {
 
   const createMutation = useMutation({
     mutationFn: createCategory,
-    onSuccess: () => {
+    onSuccess: (category) => {
       queryClient.invalidateQueries({ queryKey: ['categories'] })
+      toast.success(`Đã thêm danh mục "${category.name}"`)
       setFormOpen(false)
     },
   })
 
   const updateMutation = useMutation({
     mutationFn: updateCategory,
-    onSuccess: () => {
+    onSuccess: (category) => {
       queryClient.invalidateQueries({ queryKey: ['categories'] })
       queryClient.invalidateQueries({ queryKey: ['events'] })
+      toast.success(`Đã cập nhật danh mục "${category.name}"`)
       setFormOpen(false)
     },
   })
@@ -88,6 +91,7 @@ export function CategoriesPage() {
     mutationFn: deleteCategory,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] })
+      toast.success(`Đã xóa danh mục "${deletingCategory?.name}"`)
       setDeletingCategory(null)
     },
     onSettled: () => {
