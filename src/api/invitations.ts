@@ -16,6 +16,7 @@ export async function getInvitations(params: GetInvitationsParams = {}) {
 
 export async function createInvitation(payload: CreateInvitationPayload) {
   const formData = new FormData()
+  formData.append('name', payload.name)
   formData.append('eventId', String(payload.eventId))
   formData.append('image', payload.image)
   if (payload.active !== undefined) {
@@ -28,11 +29,13 @@ export async function createInvitation(payload: CreateInvitationPayload) {
 
 export async function updateInvitation({
   id,
+  name,
   eventId,
   image,
   active,
 }: UpdateInvitationPayload) {
   const formData = new FormData()
+  if (name) formData.append('name', name)
   if (eventId !== undefined) formData.append('eventId', String(eventId))
   if (image) formData.append('image', image)
   if (active !== undefined) formData.append('active', String(active))

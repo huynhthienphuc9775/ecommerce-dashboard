@@ -19,6 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -120,12 +121,14 @@ export function InvitationsPage() {
   const [deletingInvitation, setDeletingInvitation] =
     useState<Invitation | null>(null)
 
+  const [name, setName] = useState('')
   const [eventId, setEventId] = useState<string>('')
   const [image, setImage] = useState<File | null>(null)
   const [active, setActive] = useState(true)
 
   function openCreateForm() {
     setEditingInvitation(null)
+    setName('')
     setEventId(events[0] ? String(events[0].id) : '')
     setImage(null)
     setActive(true)
@@ -135,6 +138,7 @@ export function InvitationsPage() {
 
   function openEditForm(invitation: Invitation) {
     setEditingInvitation(invitation)
+    setName(invitation.name)
     setEventId(String(invitation.eventId))
     setImage(null)
     setActive(invitation.active)
@@ -187,11 +191,13 @@ export function InvitationsPage() {
   function handleSubmit(event: SubmitEvent) {
     event.preventDefault()
 
-    if (!eventId) return
+    const trimmedName = name.trim()
+    if (!trimmedName || !eventId) return
 
     if (editingInvitation) {
       updateMutation.mutate({
         id: editingInvitation.id,
+        name: trimmedName,
         eventId: Number(eventId),
         image: image ?? undefined,
         active,
@@ -200,7 +206,12 @@ export function InvitationsPage() {
     }
 
     if (!image) return
-    createMutation.mutate({ eventId: Number(eventId), image, active })
+    createMutation.mutate({
+      name: trimmedName,
+      eventId: Number(eventId),
+      image,
+      active,
+    })
   }
 
   const formMutation = editingInvitation ? updateMutation : createMutation
@@ -430,6 +441,15 @@ export function InvitationsPage() {
           </DialogHeader>
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-2">
+              <Label htmlFor="name">Tên thiệp mời</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Nhập tên thiệp mời"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
               <Label htmlFor="eventId">Sự kiện</Label>
               <Select
                 value={eventId}
@@ -477,6 +497,7 @@ export function InvitationsPage() {
                 type="submit"
                 disabled={
                   formMutation.isPending ||
+                  !name.trim() ||
                   !eventId ||
                   (!editingInvitation && !image)
                 }

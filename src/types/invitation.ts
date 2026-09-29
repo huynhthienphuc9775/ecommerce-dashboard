@@ -28,6 +28,7 @@ export interface GetInvitationsParams {
 }
 
 export interface CreateInvitationPayload {
+  name: string
   eventId: number
   image: File
   active?: boolean
@@ -35,6 +36,7 @@ export interface CreateInvitationPayload {
 
 export interface UpdateInvitationPayload {
   id: number
+  name?: string
   eventId?: number
   image?: File
   active?: boolean
