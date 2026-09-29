@@ -1,4 +1,4 @@
-import { LayoutDashboard, Mail, Users } from 'lucide-react'
+import { CalendarDays, LayoutDashboard, Mail, Tags, Users } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
   Sidebar,
@@ -20,6 +20,8 @@ const navItems = [
     icon: Mail,
     end: false,
   },
+  { to: '/admin/categories', label: 'Danh mục', icon: Tags, end: false },
+  { to: '/admin/events', label: 'Sự kiện', icon: CalendarDays, end: false },
   { to: '/admin/users', label: 'Người dùng', icon: Users, end: false },
 ]
 

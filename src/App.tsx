@@ -5,7 +5,9 @@ import { AuthLayout } from '@/layouts/AuthLayout'
 import { MainLayout } from '@/layouts/MainLayout'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { RegisterPage } from '@/pages/auth/RegisterPage'
+import { CategoriesPage } from '@/pages/CategoriesPage'
 import { DashboardPage } from '@/pages/DashboardPage'
+import { EventsPage } from '@/pages/EventsPage'
 import { HomePage } from '@/pages/HomePage'
 import { InvitationsPage } from '@/pages/InvitationsPage'
 import { UsersPage } from '@/pages/UsersPage'
@@ -24,6 +26,8 @@ function App() {
         <Route path="/admin" element={<MainLayout />}>
           <Route index element={<DashboardPage />} />
           <Route path="invitations" element={<InvitationsPage />} />
+          <Route path="categories" element={<CategoriesPage />} />
+          <Route path="events" element={<EventsPage />} />
           <Route path="users" element={<UsersPage />} />
         </Route>
       </Route>
