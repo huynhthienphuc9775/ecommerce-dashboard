@@ -12,6 +12,15 @@ export async function getEvents(params: GetEventsParams = {}) {
   return data
 }
 
+// Backend chưa có endpoint trả về toàn bộ sự kiện, nên lấy một trang đủ lớn
+// để đổ vào các dropdown chọn sự kiện.
+const SELECT_OPTIONS_LIMIT = 1000
+
+export async function getEventOptions() {
+  const { data } = await getEvents({ page: 1, limit: SELECT_OPTIONS_LIMIT })
+  return data
+}
+
 export async function createEvent(payload: CreateEventPayload) {
   const formData = new FormData()
   formData.append('name', payload.name)

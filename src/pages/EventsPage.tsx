@@ -118,6 +118,7 @@ export function EventsPage() {
     mutationFn: createEvent,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] })
+      queryClient.invalidateQueries({ queryKey: ['event-options'] })
       setFormOpen(false)
     },
   })
@@ -126,6 +127,8 @@ export function EventsPage() {
     mutationFn: updateEvent,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] })
+      queryClient.invalidateQueries({ queryKey: ['event-options'] })
+      queryClient.invalidateQueries({ queryKey: ['invitations'] })
       setFormOpen(false)
     },
   })
@@ -136,12 +139,18 @@ export function EventsPage() {
     mutationFn: deleteEvent,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] })
+      queryClient.invalidateQueries({ queryKey: ['event-options'] })
       setDeletingEvent(null)
     },
     onSettled: () => {
       isDeletingRef.current = false
     },
   })
+
+  function openDeleteDialog(event: Event) {
+    deleteMutation.reset()
+    setDeletingEvent(event)
+  }
 
   function handleDelete() {
     if (isDeletingRef.current || !deletingEvent) return
@@ -282,7 +291,7 @@ export function EventsPage() {
                     variant="ghost"
                     size="sm"
                     className="text-destructive"
-                    onClick={() => setDeletingEvent(event)}
+                    onClick={() => openDeleteDialog(event)}
                   >
                     Xóa
                   </Button>
@@ -405,6 +414,11 @@ export function EventsPage() {
               vĩnh viễn.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {deleteMutation.isError && (
+            <p className="text-sm text-destructive">
+              {getErrorMessage(deleteMutation.error)}
+            </p>
+          )}
           <AlertDialogFooter>
             <AlertDialogCancel>Hủy</AlertDialogCancel>
             <AlertDialogAction

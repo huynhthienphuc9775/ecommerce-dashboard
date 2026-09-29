@@ -1,15 +1,10 @@
-export const InvitationType = {
-  WEDDING: 'wedding',
-  BIRTHDAY: 'birthday',
-} as const
-
-export type InvitationType =
-  (typeof InvitationType)[keyof typeof InvitationType]
+import type { Event } from '@/types/event'
 
 export interface Invitation {
   id: number
   name: string
-  type: InvitationType
+  eventId: number
+  event: Event
   imageUrl: string
   active: boolean
   createdAt: string
@@ -24,21 +19,23 @@ export interface PaginatedInvitations {
 }
 
 export interface GetInvitationsParams {
-  type?: InvitationType
+  eventId?: number
+  // Lọc theo danh mục của sự kiện; invitation không tự lưu categoryId.
+  categoryId?: number
   active?: boolean
   page?: number
   limit?: number
 }
 
 export interface CreateInvitationPayload {
-  type: InvitationType
+  eventId: number
   image: File
   active?: boolean
 }
 
 export interface UpdateInvitationPayload {
   id: number
-  type?: InvitationType
+  eventId?: number
   image?: File
   active?: boolean
 }

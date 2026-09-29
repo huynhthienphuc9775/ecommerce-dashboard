@@ -36,6 +36,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { getCategories } from '@/api/categories'
+import { getEventOptions } from '@/api/events'
 import {
   createInvitation,
   deleteInvitation,
@@ -43,44 +45,66 @@ import {
   updateInvitation,
 } from '@/api/invitations'
 import { getErrorMessage } from '@/lib/get-error-message'
-import { type Invitation, InvitationType } from '@/types/invitation'
-
-const TYPE_LABELS: Record<InvitationType, string> = {
-  [InvitationType.WEDDING]: 'Đám cưới',
-  [InvitationType.BIRTHDAY]: 'Sinh nhật',
-}
-
-const TYPE_BADGE_CLASSNAME: Record<InvitationType, string> = {
-  [InvitationType.WEDDING]:
-    'bg-rose-100! text-rose-700! dark:bg-rose-500/20! dark:text-rose-300!',
-  [InvitationType.BIRTHDAY]:
-    'bg-amber-100! text-amber-700! dark:bg-amber-500/20! dark:text-amber-300!',
-}
+import type { Invitation } from '@/types/invitation'
 
 const PAGE_SIZE = 10
+const ALL_EVENTS = 'all'
+const ALL_CATEGORIES = 'all'
 
 type ActiveFilter = 'all' | 'active' | 'inactive'
 
 export function InvitationsPage() {
   const queryClient = useQueryClient()
 
+  const eventsQuery = useQuery({
+    queryKey: ['event-options'],
+    queryFn: getEventOptions,
+  })
+
+  const categoriesQuery = useQuery({
+    queryKey: ['categories'],
+    queryFn: getCategories,
+  })
+
+  const events = eventsQuery.data ?? []
+  const categories = categoriesQuery.data ?? []
+
+  function getEventName(id: number) {
+    return events.find((event) => event.id === id)?.name ?? `#${id}`
+  }
+
+  function getCategoryName(id: number) {
+    return categories.find((category) => category.id === id)?.name ?? `#${id}`
+  }
+
   const [page, setPage] = useState(1)
-  const [filterType, setFilterType] = useState<InvitationType | 'all'>('all')
+  const [filterEvent, setFilterEvent] = useState<string>(ALL_EVENTS)
+  const [filterCategory, setFilterCategory] = useState<string>(ALL_CATEGORIES)
   const [filterActive, setFilterActive] = useState<ActiveFilter>('all')
 
   const invitationsQuery = useQuery({
-    queryKey: ['invitations', { page, filterType, filterActive }],
+    queryKey: [
+      'invitations',
+      { page, filterEvent, filterCategory, filterActive },
+    ],
     queryFn: () =>
       getInvitations({
         page,
         limit: PAGE_SIZE,
-        type: filterType === 'all' ? undefined : filterType,
+        eventId: filterEvent === ALL_EVENTS ? undefined : Number(filterEvent),
+        categoryId:
+          filterCategory === ALL_CATEGORIES ? undefined : Number(filterCategory),
         active: filterActive === 'all' ? undefined : filterActive === 'active',
       }),
   })
 
-  function handleFilterTypeChange(value: InvitationType | 'all') {
-    setFilterType(value)
+  function handleFilterEventChange(value: string) {
+    setFilterEvent(value)
+    setPage(1)
+  }
+
+  function handleFilterCategoryChange(value: string) {
+    setFilterCategory(value)
     setPage(1)
   }
 
@@ -96,13 +120,13 @@ export function InvitationsPage() {
   const [deletingInvitation, setDeletingInvitation] =
     useState<Invitation | null>(null)
 
-  const [type, setType] = useState<InvitationType>(InvitationType.WEDDING)
+  const [eventId, setEventId] = useState<string>('')
   const [image, setImage] = useState<File | null>(null)
   const [active, setActive] = useState(true)
 
   function openCreateForm() {
     setEditingInvitation(null)
-    setType(InvitationType.WEDDING)
+    setEventId(events[0] ? String(events[0].id) : '')
     setImage(null)
     setActive(true)
     createMutation.reset()
@@ -111,7 +135,7 @@ export function InvitationsPage() {
 
   function openEditForm(invitation: Invitation) {
     setEditingInvitation(invitation)
-    setType(invitation.type)
+    setEventId(String(invitation.eventId))
     setImage(null)
     setActive(invitation.active)
     updateMutation.reset()
@@ -163,10 +187,12 @@ export function InvitationsPage() {
   function handleSubmit(event: SubmitEvent) {
     event.preventDefault()
 
+    if (!eventId) return
+
     if (editingInvitation) {
       updateMutation.mutate({
         id: editingInvitation.id,
-        type,
+        eventId: Number(eventId),
         image: image ?? undefined,
         active,
       })
@@ -174,36 +200,71 @@ export function InvitationsPage() {
     }
 
     if (!image) return
-    createMutation.mutate({ type, image, active })
+    createMutation.mutate({ eventId: Number(eventId), image, active })
   }
 
   const formMutation = editingInvitation ? updateMutation : createMutation
+  const hasEvents = events.length > 0
 
   return (
     <div>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Thiệp mời</h1>
-        <Button onClick={openCreateForm}>Thêm thiệp mời</Button>
+        <Button onClick={openCreateForm} disabled={!hasEvents}>
+          Thêm thiệp mời
+        </Button>
       </div>
+
+      {eventsQuery.isSuccess && !hasEvents && (
+        <p className="mt-4 text-sm text-muted-foreground">
+          Cần tạo ít nhất một sự kiện trước khi thêm thiệp mời.
+        </p>
+      )}
 
       <div className="mt-4 flex gap-3">
         <Select
-          value={filterType}
-          onValueChange={(value) =>
-            handleFilterTypeChange(value as InvitationType | 'all')
-          }
+          value={filterEvent}
+          onValueChange={(value) => handleFilterEventChange(value as string)}
         >
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-48">
             <SelectValue>
-              {(value: InvitationType | 'all') =>
-                value === 'all' ? 'Tất cả loại' : TYPE_LABELS[value]
+              {(value: string) =>
+                value === ALL_EVENTS
+                  ? 'Tất cả sự kiện'
+                  : getEventName(Number(value))
               }
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tất cả loại</SelectItem>
-            <SelectItem value={InvitationType.WEDDING}>Đám cưới</SelectItem>
-            <SelectItem value={InvitationType.BIRTHDAY}>Sinh nhật</SelectItem>
+            <SelectItem value={ALL_EVENTS}>Tất cả sự kiện</SelectItem>
+            {events.map((event) => (
+              <SelectItem key={event.id} value={String(event.id)}>
+                {event.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={filterCategory}
+          onValueChange={(value) => handleFilterCategoryChange(value as string)}
+        >
+          <SelectTrigger className="w-48">
+            <SelectValue>
+              {(value: string) =>
+                value === ALL_CATEGORIES
+                  ? 'Tất cả danh mục'
+                  : getCategoryName(Number(value))
+              }
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_CATEGORIES}>Tất cả danh mục</SelectItem>
+            {categories.map((category) => (
+              <SelectItem key={category.id} value={String(category.id)}>
+                {category.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
 
@@ -238,7 +299,8 @@ export function InvitationsPage() {
             <TableRow>
               <TableHead className="w-16">Ảnh</TableHead>
               <TableHead>Tên</TableHead>
-              <TableHead>Loại</TableHead>
+              <TableHead>Sự kiện</TableHead>
+              <TableHead>Danh mục</TableHead>
               <TableHead>Trạng thái</TableHead>
               <TableHead className="w-32 text-right">Hành động</TableHead>
             </TableRow>
@@ -246,14 +308,14 @@ export function InvitationsPage() {
           <TableBody>
             {invitationsQuery.isLoading && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground">
+                <TableCell colSpan={6} className="text-center text-muted-foreground">
                   Đang tải...
                 </TableCell>
               </TableRow>
             )}
             {invitationsQuery.isError && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-destructive">
+                <TableCell colSpan={6} className="text-center text-destructive">
                   {getErrorMessage(invitationsQuery.error)}
                 </TableCell>
               </TableRow>
@@ -261,7 +323,7 @@ export function InvitationsPage() {
             {invitationsQuery.isSuccess &&
               invitationsQuery.data.data.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
                     Chưa có thiệp mời nào.
                   </TableCell>
                 </TableRow>
@@ -277,12 +339,16 @@ export function InvitationsPage() {
                 </TableCell>
                 <TableCell>{invitation.name}</TableCell>
                 <TableCell>
-                  <Badge
-                    variant="outline"
-                    className={TYPE_BADGE_CLASSNAME[invitation.type]}
-                  >
-                    {TYPE_LABELS[invitation.type]}
-                  </Badge>
+                  {invitation.event?.name ?? getEventName(invitation.eventId)}
+                </TableCell>
+                <TableCell>
+                  {invitation.event?.category ? (
+                    <Badge variant="outline">
+                      {invitation.event.category.name}
+                    </Badge>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
@@ -364,23 +430,24 @@ export function InvitationsPage() {
           </DialogHeader>
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="type">Loại</Label>
+              <Label htmlFor="eventId">Sự kiện</Label>
               <Select
-                value={type}
-                onValueChange={(value) => setType(value as InvitationType)}
+                value={eventId}
+                onValueChange={(value) => setEventId(value as string)}
               >
-                <SelectTrigger id="type" className="w-full">
+                <SelectTrigger id="eventId" className="w-full">
                   <SelectValue>
-                    {(value: InvitationType) => TYPE_LABELS[value]}
+                    {(value: string) =>
+                      value ? getEventName(Number(value)) : 'Chọn sự kiện'
+                    }
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={InvitationType.WEDDING}>
-                    Đám cưới
-                  </SelectItem>
-                  <SelectItem value={InvitationType.BIRTHDAY}>
-                    Sinh nhật
-                  </SelectItem>
+                  {events.map((event) => (
+                    <SelectItem key={event.id} value={String(event.id)}>
+                      {event.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -409,7 +476,9 @@ export function InvitationsPage() {
               <Button
                 type="submit"
                 disabled={
-                  formMutation.isPending || (!editingInvitation && !image)
+                  formMutation.isPending ||
+                  !eventId ||
+                  (!editingInvitation && !image)
                 }
               >
                 {formMutation.isPending ? 'Đang lưu...' : 'Lưu'}
