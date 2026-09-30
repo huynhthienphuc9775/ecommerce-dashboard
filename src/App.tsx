@@ -1,16 +1,16 @@
 import { Route, Routes } from 'react-router-dom'
-import { RequireAuth } from '@/components/auth/RequireAuth'
-import { RequireGuest } from '@/components/auth/RequireGuest'
+import { RequireAuth } from '@/components/shared/RequireAuth'
+import { RequireGuest } from '@/components/shared/RequireGuest'
 import { AuthLayout } from '@/layouts/AuthLayout'
-import { MainLayout } from '@/layouts/MainLayout'
+import { AdminLayout } from '@/layouts/AdminLayout'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { RegisterPage } from '@/pages/auth/RegisterPage'
-import { CategoriesPage } from '@/pages/CategoriesPage'
-import { DashboardPage } from '@/pages/DashboardPage'
-import { EventsPage } from '@/pages/EventsPage'
-import { HomePage } from '@/pages/HomePage'
-import { InvitationsPage } from '@/pages/InvitationsPage'
-import { UsersPage } from '@/pages/UsersPage'
+import { CategoriesPage } from '@/pages/admin/CategoriesPage'
+import { DashboardPage } from '@/pages/admin/DashboardPage'
+import { EventsPage } from '@/pages/admin/EventsPage'
+import { HomePage } from '@/pages/public/HomePage'
+import { InvitationsPage } from '@/pages/admin/InvitationsPage'
+import { UsersPage } from '@/pages/admin/UsersPage'
 
 function App() {
   return (
@@ -23,7 +23,7 @@ function App() {
         </Route>
       </Route>
       <Route element={<RequireAuth />}>
-        <Route path="/admin" element={<MainLayout />}>
+        <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<DashboardPage />} />
           <Route path="invitations" element={<InvitationsPage />} />
           <Route path="categories" element={<CategoriesPage />} />

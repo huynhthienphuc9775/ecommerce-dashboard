@@ -43,9 +43,34 @@ Mỗi trang là một file tự chứa: query, mutation, state của form/dialog
 
 - `/` — `HomePage`, công khai
 - `RequireGuest` → `AuthLayout` → `/login`, `/register`
-- `RequireAuth` → `/admin` + `MainLayout` (sidebar + header), các trang con: index (dashboard), `invitations`, `categories`, `events`, `users`
+- `RequireAuth` → `/admin` + `AdminLayout` (sidebar + header), các trang con: index (dashboard), `invitations`, `categories`, `events`, `users`
 
 Guard đọc `isAuthenticated` từ Zustand. `RequireGuest` trả người dùng về `location.state.from` nếu có, mặc định `/admin`.
+
+### Hai luồng: admin và public
+
+Dự án có hai luồng người dùng tách biệt, và **cấu trúc thư mục phản ánh điều đó** — nhìn đường dẫn là biết ngay file thuộc luồng nào:
+
+```
+src/components/
+  ui/       shadcn sinh ra — dùng chung, không sửa tay
+  shared/   dùng ở CẢ HAI luồng (RequireAuth, RequireGuest)
+  admin/    chỉ luồng admin (AppSidebar, Header)
+  public/   chỉ luồng công khai
+src/pages/
+  admin/    Dashboard, Categories, Events, Invitations, Users
+  public/   HomePage
+  auth/     Login, Register
+src/layouts/
+  AdminLayout.tsx   sidebar + header, dùng cho /admin
+  AuthLayout.tsx    khung căn giữa cho login/register
+```
+
+Quy tắc đặt file mới: mặc định đặt vào thư mục của luồng đang dùng nó. **Chỉ chuyển lên `shared/` khi thực sự có luồng thứ hai dùng đến** — không đoán trước, tránh `shared/` phình thành thùng rác.
+
+`auth/` để riêng, không gộp vào `admin/`: login/register là màn hình công khai (chưa đăng nhập), dù đăng nhập xong thì vào `/admin`.
+
+Khi luồng public phát triển nhiều trang và cần khung riêng, thêm `src/layouts/PublicLayout.tsx` thay vì nhét vào `AdminLayout`.
 
 ### Auth
 

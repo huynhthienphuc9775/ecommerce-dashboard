@@ -1,9 +1,9 @@
 import { Outlet } from 'react-router-dom'
-import { AppSidebar } from '@/components/layout/AppSidebar'
-import { Header } from '@/components/layout/Header'
+import { AppSidebar } from '@/components/admin/AppSidebar'
+import { Header } from '@/components/admin/Header'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 
-export function MainLayout() {
+export function AdminLayout() {
   return (
     <SidebarProvider>
       <AppSidebar />
