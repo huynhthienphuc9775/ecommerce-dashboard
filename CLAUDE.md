@@ -1,0 +1,102 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Dự án
+
+Admin dashboard quản lý **thiệp mời** (invitation): danh mục (category) → sự kiện (event) → thiệp mời (invitation). SPA thuần client, gọi REST API của một backend riêng (NestJS-style) qua `VITE_API_URL`.
+
+Lưu ý: `HomePage` còn tiêu đề "Ecommerce" — di sản từ template, không phản ánh domain thật.
+
+## Lệnh
+
+```bash
+npm run dev      # Vite dev server
+npm run build    # tsc -b && vite build (type-check là một phần của build)
+npm run lint     # eslint .
+npm run preview  # xem thử bản build
+```
+
+Chưa có test framework nào được cài. Cách kiểm chứng duy nhất hiện tại là `npm run build` (type-check) + `npm run lint`.
+
+Cần `.env` với `VITE_API_URL` (xem `.env.example`).
+
+## Stack
+
+React 19 · Vite 8 · TypeScript · React Router 7 · TanStack Query 5 · Zustand 5 · Tailwind v4 · shadcn/ui trên nền **Base UI** (`@base-ui/react`), style `base-nova`.
+
+Alias `@/*` → `src/*` (khai báo ở cả `vite.config.ts` và `tsconfig.app.json`).
+
+## Kiến trúc
+
+Phân tầng nghiêm ngặt, không có tầng hook trung gian:
+
+```
+src/types/*     interface thuần cho entity + Payload + Params
+src/api/*       hàm gọi apiClient, nhận/trả type từ src/types — KHÔNG chứa React
+src/pages/*     useQuery/useMutation gọi thẳng hàm trong src/api + toàn bộ UI & state
+```
+
+Mỗi trang là một file tự chứa: query, mutation, state của form/dialog, bảng, phân trang đều nằm chung. Không tách hook riêng, không tách component con — giữ đúng khuôn mẫu này khi thêm trang mới.
+
+### Định tuyến (`src/App.tsx`)
+
+- `/` — `HomePage`, công khai
+- `RequireGuest` → `AuthLayout` → `/login`, `/register`
+- `RequireAuth` → `/admin` + `MainLayout` (sidebar + header), các trang con: index (dashboard), `invitations`, `categories`, `events`, `users`
+
+Guard đọc `isAuthenticated` từ Zustand. `RequireGuest` trả người dùng về `location.state.from` nếu có, mặc định `/admin`.
+
+### Auth
+
+`src/store/auth-store.ts` — Zustand + `persist`, lưu localStorage key `auth-storage`. Chỉ giữ `accessToken` + `isAuthenticated`; **không có refresh token**, hết hạn là đăng xuất.
+
+`src/lib/api-client.ts` cài hai interceptor:
+- request: gắn `Authorization: Bearer <accessToken>` đọc từ `useAuthStore.getState()`
+- response: 401 **chỉ khi đang đăng nhập** → `logout()` + toast "hết hạn phiên". 401 lúc login được thả xuống cho `LoginPage` tự hiển thị.
+
+Endpoint lệch quy ước cần nhớ: đăng ký là `POST /user` (không phải `/auth/register`), danh sách user là `GET /user` (số ít).
+
+### Xử lý lỗi — hai lớp
+
+1. **Toàn cục**: `QueryCache`/`MutationCache` trong `src/main.tsx` bắt mọi lỗi → `toast.error(getErrorMessage(error))`, bỏ qua lỗi 401 (interceptor đã báo rồi).
+2. **Tại chỗ**: trang vẫn tự render `getErrorMessage(mutation.error)` trong dialog/bảng để người dùng thấy lỗi ngay cạnh thao tác.
+
+Cả hai cùng chạy — đây là chủ ý, không phải trùng lặp. `getErrorMessage` gom `response.data.message` kể cả khi backend trả mảng (lỗi validation NestJS).
+
+### Toast
+
+`src/lib/toast.ts` tạo `toastManager` **bên ngoài React** để axios interceptor cũng bắn được toast. Luôn dùng `toast.success/error/warning/info`, không gọi `toastManager.add` trực tiếp. `error`/`warning` tự đặt `priority: 'high'` và timeout dài hơn.
+
+### Query key & invalidation
+
+Key đang dùng: `['categories']`, `['events', {filters}]`, `['event-options']`, `['invitations', {filters}]`, `['users']`.
+
+`event-options` tách riêng khỏi `events` vì backend chưa có endpoint "lấy tất cả sự kiện" — `getEventOptions()` gọi `getEvents({page:1, limit:1000})` để đổ dropdown.
+
+Quan hệ invalidation phải giữ khi sửa mutation:
+- **category**: create/delete chỉ invalidate `categories`; update invalidate thêm `events` (event nhúng object `category`)
+- thêm/sửa/xóa **event** → invalidate `events` + `event-options`; riêng update còn phải invalidate `invitations` (invitation nhúng object `event`)
+- mutation **invitation** → invalidate `invitations`
+
+### Upload ảnh
+
+`events` và `invitations` gửi **`FormData`**, không phải JSON — để axios tự set `Content-Type`, đừng gắn tay. Ở `update*`, field nào `undefined` thì không `append` (PATCH một phần). Khi sửa mà không đổi ảnh, để trống input file.
+
+## Quy ước
+
+- **Toàn bộ chuỗi hiển thị cho người dùng viết bằng tiếng Việt.** Comment trong code cũng tiếng Việt, và chỉ viết khi giải thích *tại sao*.
+- Component export dạng **named export** (`export function EventsPage()`), không default export — trừ `App.tsx`.
+- Base UI khác Radix ở vài chỗ: `SelectValue` nhận **render function** `{(value: string) => ...}` chứ không phải `placeholder`; `onValueChange` trả `unknown` nên phải ép `value as string`. Xem `EventsPage` làm mẫu.
+- Value của `Select` luôn là string — ID số phải `String(id)` khi set và `Number(value)` khi dùng.
+- Bộ lọc dạng "tất cả" dùng sentinel string (`'all'`) rồi map sang `undefined` khi gọi API; đổi filter phải `setPage(1)`.
+- Ô tìm kiếm debounce 400ms bằng `useEffect` + `setTimeout` (xem `EventsPage`).
+- Xóa dùng `AlertDialog` + một `isDeletingRef` chặn double-submit.
+- Mở form là gọi `mutation.reset()` trước để xóa lỗi của lần trước.
+- ESLint bật `unused-imports/no-unused-imports` ở mức **error** — import thừa làm fail lint.
+- `noUnusedLocals`/`noUnusedParameters` bật trong tsconfig; tiền tố `_` để bỏ qua.
+- Chưa có Prettier/Biome. Style chủ đạo là **single quote, không semicolon**; vài file cũ (`LoginPage`, `HomePage`) còn double quote + semicolon. Viết theo style của file đang sửa.
+
+## Components UI
+
+`src/components/ui/*` là code shadcn sinh ra — thêm component mới bằng shadcn CLI (`components.json` đã cấu hình sẵn) thay vì viết tay. Theme và CSS variable nằm trong `src/index.css` (Tailwind v4 `@theme inline`, không có `tailwind.config.js`).
